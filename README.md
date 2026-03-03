@@ -1,19 +1,18 @@
-# UMEQAM Runtime Guardrail
+# UMEQAM Guardrail
 
-**Runtime epistemic risk mitigation for LLM pipelines under EU AI Act.**
+Runtime защита от ошибок с высокой уверенностью в LLM (EU AI Act)
 
-### Key features
-- 7-axis nonlinear risk combiner + s7 self-signal damping  
-- Deterministic scoring with fingerprint lock  
-- ONNX export for production inference  
-- LangChain callback for real-time blocking  
-- Joint risk + ATS regime classification  
+Ключевые возможности:
+- 7 сигналов + s7 демпфирование
+- Детерминированный расчёт риска
+- ONNX + LangChain
+- Блокировка/эскалация в реальном времени
 
-### Quick start
+Быстрый запуск:
 ```python
 from umeqam_guardrail import UMEQAMGuardrail
 
 guard = UMEQAMGuardrail()
 profile = guard.profile(response="...", signals={...})
 if profile["risk_zone"] in ["C", "D"]:
-    raise ValueError("High epistemic risk")
+    raise ValueError("Высокий риск")
