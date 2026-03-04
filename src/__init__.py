@@ -1,10 +1,11 @@
-from .umeqam_risk_core import UMEQAMGuardrail
-from .langchain_integration import UmeqamGuardrailRunnable, with_umeqam_guardrail
+"""
+UMEQAM Runtime Guardrail Package
 
-__version__ = "0.1.0"
+This package exposes the main guardrail engine used by the FastAPI gateway.
+"""
+
+from .umeqam_runtime_guardrail import UMEQAMGuardrail
 
 __all__ = [
-    "UMEQAMGuardrail",
-    "UmeqamGuardrailRunnable",
-    "with_umeqam_guardrail",
+    "UMEQAMGuardrail"
 ]
