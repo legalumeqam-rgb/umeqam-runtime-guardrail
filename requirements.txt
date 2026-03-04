@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 torch>=2.0
 onnxruntime>=1.16
 sentence-transformers>=2.6
@@ -5,3 +6,10 @@ langchain-core>=0.1
 numpy>=1.26
 scikit-learn>=1.5
 gradio>=4.0
+=======
+numpy>=1.26.0
+langchain-core>=0.2.0
+# optional для примеров и тестов
+langchain-openai>=0.1.0
+streamlit>=1.30.0  # для демо
+>>>>>>> 4cc336a2003ebe0c8b2dbe4b25e7568758a3c716
