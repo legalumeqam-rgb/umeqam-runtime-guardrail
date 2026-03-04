@@ -1,21 +1,20 @@
-import sys
-import os
-
-# гарантированно добавляем каталог проекта в sys.path
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, BASE_DIR)
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
+import os
+import sys
 
-# прямой импорт из локального пакета
-from umeqam_runtime_guardrail.guardrail import UMEQAMGuardrail
+# Добавляем каталог проекта в путь Python
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
+
+# Импорт напрямую из файла guardrail.py
+from guardrail import UMEQAMGuardrail
 
 
 app = FastAPI(
     title="UMEQAM Runtime Guardrail API",
-    description="Runtime epistemic guardrail for LLM outputs under EU AI Act",
+    description="Runtime epistemic guardrail for LLM outputs",
     version="0.1.0"
 )
 
@@ -47,16 +46,10 @@ async def check(request: CheckRequest):
 
     try:
 
-        if request.use_auto_signals:
-            profile = guard.profile_auto(
-                request.response,
-                ats_proxy=request.ats_proxy
-            )
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Manual signals required when use_auto_signals=false"
-            )
+        profile = guard.profile_auto(
+            request.response,
+            ats_proxy=request.ats_proxy
+        )
 
         return CheckResponse(
             risk_score=profile["risk_score"],
