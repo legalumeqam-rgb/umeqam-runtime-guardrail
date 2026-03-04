@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
-from src.umeqam.umeqam_risk_core import UMEQAMGuardrail
+from src.umeqam_risk_core import UMEQAMGuardrail
 
 
 app = FastAPI(
