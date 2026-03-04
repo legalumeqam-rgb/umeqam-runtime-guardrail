@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+﻿from fastapi import APIRouter
 from pydantic import BaseModel
 
-from umeqam.umeqam_risk_core import UMEQAMGuardrail
+from src.umeqam_risk_core import UMEQAMGuardrail
 
 router = APIRouter()
 
@@ -16,7 +16,6 @@ class AnalyzeRequest(BaseModel):
 def analyze(req: AnalyzeRequest):
 
     profile = guard.profile_auto(req.text)
-
     score, zone = guard.score_and_zone(profile)
 
     return {
