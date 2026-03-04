@@ -1,33 +1,20 @@
-# main.py - FastAPI wrapper for UMEQAM Runtime Guardrail + Epistemic Engine
+# main.py
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
 import uvicorn
 
-# Existing guardrail engine
-from umeqam_runtime_guardrail import UMEQAMGuardrail
-
-# New epistemic engine
-from umeqam.epistemic.multi_lens_engine import MultiLensEpistemicEngine
-
+# исправленный импорт
+from umeqam_runtime_guardrail.guardrail import UMEQAMGuardrail
 
 app = FastAPI(
     title="UMEQAM Runtime Guardrail API",
     description="Runtime epistemic guardrail for LLM outputs under EU AI Act",
-    version="0.2.0"
+    version="0.1.0"
 )
 
-# Existing runtime guardrail
 guard = UMEQAMGuardrail(threshold=0.36)
 
-# New epistemic engine
-epistemic_engine = MultiLensEpistemicEngine()
-
-
-# ===============================
-# Request Models
-# ===============================
 
 class CheckRequest(BaseModel):
     response: str
@@ -44,23 +31,10 @@ class CheckResponse(BaseModel):
     fingerprint: str
 
 
-class EpistemicRequest(BaseModel):
-    text: str
-    comparison_responses: Optional[List[str]] = None
-
-
-# ===============================
-# Health Endpoint
-# ===============================
-
 @app.get("/health")
 def health():
-    return {"status": "ok", "engine": "UMEQAM"}
+    return {"status": "ok"}
 
-
-# ===============================
-# Existing Guardrail Endpoint
-# ===============================
 
 @app.post("/check", response_model=CheckResponse)
 async def check(request: CheckRequest):
@@ -91,49 +65,13 @@ async def check(request: CheckRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ===============================
-# New Epistemic Engine Endpoint
-# ===============================
-
-@app.post("/v1/analyze")
-async def analyze_epistemic(request: EpistemicRequest):
-
-    try:
-
-        result = epistemic_engine.analyze(
-            text=request.text,
-            comparison_responses=request.comparison_responses
-        )
-
-        return {
-            "risk_score": result.score,
-            "risk_level": result.level,
-            "lens_scores": result.lens_scores
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ===============================
-# Root Endpoint
-# ===============================
-
 @app.get("/")
 def root():
     return {
         "service": "UMEQAM Runtime Guardrail",
-        "version": "0.2.0",
-        "engines": [
-            "UMEQAMGuardrail",
-            "EpistemicEngine"
-        ]
+        "status": "running"
     }
 
-
-# ===============================
-# Run server
-# ===============================
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
