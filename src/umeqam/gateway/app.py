@@ -3,9 +3,10 @@ from fastapi.responses import JSONResponse
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
-from umeqam.gateway.routes.chat import router as chat_router
-from umeqam.gateway.routes.analyze import router as analyze_router
 from umeqam.gateway.routes.health import router as health_router
+from umeqam.gateway.routes.analyze import router as analyze_router
+from umeqam.gateway.routes.chat import router as chat_router
+
 
 app = FastAPI(
     title="UMEQAM Gateway",
@@ -13,9 +14,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(chat_router)
-app.include_router(analyze_router)
+# подключаем routes
 app.include_router(health_router)
+app.include_router(analyze_router)
+app.include_router(chat_router)
 
 
 @app.get("/metrics")
