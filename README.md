@@ -1,97 +1,359 @@
-# UMEQAM Runtime Guardrail
+UMEQAM RUNTIME GUARDRAIL — FULL PROJECT
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![License](https://img.shields.io/badge/License-MIT-green)
+================================================
+REPOSITORY STRUCTURE
+================================================
 
-Deterministic runtime epistemic risk mitigation for LLM pipelines (EU AI Act–oriented).
+umeqam-runtime-guardrail
+│
+├── README.md
+├── LICENSE
+├── requirements.txt
+│
+├── src
+│   ├── __init__.py
+│   ├── umeqam_risk_core.py
+│   ├── signals.py
+│   └── langchain_integration.py
+│
+├── examples
+│   ├── simple_guard.py
+│   └── langchain_demo.py
+│
+└── tests
+    └── test_risk_core.py
 
-UMEQAM Runtime Guardrail is a plug-and-play runtime scoring layer that sits between an LLM response and your application output. It produces a reproducible risk score, assigns a risk zone (A–D), and supports blocking or escalation workflows.
 
----
+================================================
+README.md
+================================================
 
-## Key Features
+UMEQAM Runtime Guardrail
 
-- 7-signal nonlinear risk combiner
-- s7 self-signal damping
-- Deterministic scoring (audit-friendly)
-- Risk zones A / B / C / D
-- Runtime mitigation hook (allow / block / escalate)
-- Joint Risk × ATS regime classification
+Badges:
+Python 3.10+
+MIT License
 
----
+Description:
+Runtime guardrail for detecting high-confidence hallucinations
+and epistemic risk in LLM outputs.
 
-## Architecture
+Designed for:
+AI governance
+EU AI Act monitoring
+Production LLM pipelines
+
+Architecture:
 
 LLM Output
 ↓
 Signal Extraction (s1–s7)
 ↓
-Nonlinear Risk Combiner + s7 Damping
+Nonlinear Risk Combiner + s7 Interaction
 ↓
-Risk Zone Classification (A–D)
+Risk Score
+↓
+Zone Classification (A–D)
 ↓
 Mitigation Hook (allow / block / escalate)
 ↓
 Trace Log
 
----
 
-## Installation
+Installation:
+
+git clone https://github.com/legalumeqam-rgb/umeqam-runtime-guardrail.git
+cd umeqam-runtime-guardrail
 
 pip install -r requirements.txt
 pip install -e .
 
----
 
-## Quick Start
+Quick Example:
 
-from umeqam_guardrail import UMEQAMGuardrail
+from umeqam_risk_core import UMEQAMGuardrail
+from signals import extract_signals_auto
 
-guard = UMEQAMGuardrail(threshold=0.36)
+guard = UMEQAMGuardrail()
 
-profile = guard.profile(
-    response="This is absolutely correct without any doubt.",
-    signals={
-        "s1": 0.45,
-        "s2": 0.28,
-        "s3": 0.85,
-        "s4": 0.22,
-        "s5": 0.35,
-        "s6": 0.78,
-        "s7": 0.92
-    },
-    ats_proxy=0.61
-)
+response = "Это абсолютно точно верно."
+
+signals = extract_signals_auto(response)
+
+profile = guard.profile(response, signals)
 
 print(profile)
 
-if profile["blocked"]:
-    raise ValueError("High epistemic risk detected")
 
----
+Roadmap:
 
-## Example Output
+Auto signal extraction
+Structured logging
+ONNX export
+FastAPI wrapper
+Docker image
+Enterprise integrations
 
-{
-  "risk_score": 0.72,
-  "risk_zone": "C",
-  "blocked": true,
-  "regime": "CFW_LOCK_IN",
-  "threshold": 0.36,
-  "fingerprint": "locked:v0.1.0"
+
+================================================
+requirements.txt
+================================================
+
+numpy
+langchain
+langchain-core
+langchain-openai
+
+
+================================================
+src/__init__.py
+================================================
+
+from .umeqam_risk_core import UMEQAMGuardrail
+from .signals import extract_signals_auto
+
+__version__ = "0.1.0"
+
+__all__ = [
+    "UMEQAMGuardrail",
+    "extract_signals_auto"
+]
+
+
+================================================
+src/umeqam_risk_core.py
+================================================
+
+import math
+
+WEIGHTS = {
+    "s1": 0.17,
+    "s2": 0.13,
+    "s3": 0.14,
+    "s4": 0.13,
+    "s5": 0.16,
+    "s6": 0.15,
+    "s7": 0.12
 }
 
-If risk zone is C or D, the system can block the response or escalate to human review.
+INTERACTION_W = 0.10
 
----
 
-## License
+def compute_risk(signals):
 
-MIT License — see LICENSE.
+    linear = 0
 
----
+    for k in WEIGHTS:
+        linear += WEIGHTS[k] * signals.get(k, 0.0)
 
-## Disclaimer
+    interaction = INTERACTION_W * signals.get("s6", 0.0) * signals.get("s7", 0.0)
 
-This project provides runtime risk scoring and mitigation hooks for LLM outputs.
-It does not guarantee correctness and should be used as part of a broader governance and human oversight system.
+    raw = linear + interaction
+
+    risk = 1 / (1 + math.exp(-4 * (raw - 0.5)))
+
+    return max(0.0, min(1.0, risk))
+
+
+def risk_zone(score):
+
+    if score < 0.25:
+        return "A"
+
+    if score < 0.50:
+        return "B"
+
+    if score < 0.75:
+        return "C"
+
+    return "D"
+
+
+class UMEQAMGuardrail:
+
+    def __init__(self, threshold=0.36):
+        self.threshold = threshold
+
+    def profile(self, response, signals):
+
+        risk = compute_risk(signals)
+
+        zone = risk_zone(risk)
+
+        blocked = risk >= self.threshold
+
+        return {
+            "risk_score": risk,
+            "risk_zone": zone,
+            "blocked": blocked,
+            "threshold": self.threshold,
+            "response": response
+        }
+
+
+================================================
+src/signals.py
+================================================
+
+OVERCONFIDENCE_WORDS = [
+"точно",
+"абсолютно",
+"гарантировано",
+"без сомнений",
+"definitely",
+"certainly"
+]
+
+
+def extract_signals_auto(text):
+
+    length = len(text)
+
+    exclam = text.count("!")
+
+    confidence = 0
+
+    for w in OVERCONFIDENCE_WORDS:
+        if w in text.lower():
+            confidence += 1
+
+    signals = {
+
+        "s1": min(length / 1000, 1.0),
+
+        "s2": min(exclam / 5, 1.0),
+
+        "s3": min(confidence / 3, 1.0),
+
+        "s4": 0.4,
+
+        "s5": 0.4,
+
+        "s6": 0.5,
+
+        "s7": min(confidence / 2, 1.0)
+    }
+
+    return signals
+
+
+================================================
+src/langchain_integration.py
+================================================
+
+from umeqam_risk_core import UMEQAMGuardrail
+from signals import extract_signals_auto
+
+
+class UmeqamGuardrailRunnable:
+
+    def __init__(self, guard):
+        self.guard = guard
+
+    def invoke(self, response):
+
+        signals = extract_signals_auto(response)
+
+        profile = self.guard.profile(response, signals)
+
+        if profile["blocked"]:
+
+            return {
+                "text": "Ответ заблокирован: высокий эпистемический риск.",
+                "guard_profile": profile
+            }
+
+        return {
+            "text": response,
+            "guard_profile": profile
+        }
+
+
+def with_umeqam_guardrail(chain, guard):
+
+    wrapper = UmeqamGuardrailRunnable(guard)
+
+    def invoke(data):
+
+        result = chain.invoke(data)
+
+        text = result["text"]
+
+        return wrapper.invoke(text)
+
+    return type("GuardChain", (), {"invoke": invoke})
+
+
+================================================
+examples/simple_guard.py
+================================================
+
+from umeqam_risk_core import UMEQAMGuardrail
+from signals import extract_signals_auto
+
+guard = UMEQAMGuardrail()
+
+response = "Это абсолютно точно верно."
+
+signals = extract_signals_auto(response)
+
+profile = guard.profile(response, signals)
+
+print(profile)
+
+
+================================================
+examples/langchain_demo.py
+================================================
+
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+
+from umeqam_risk_core import UMEQAMGuardrail
+from langchain_integration import with_umeqam_guardrail
+
+guard = UMEQAMGuardrail()
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+prompt = ChatPromptTemplate.from_template(
+    "Ответь подробно: {query}"
+)
+
+chain = prompt | llm | (lambda msg: {"text": msg.content})
+
+safe_chain = with_umeqam_guardrail(
+    chain,
+    guard
+)
+
+result = safe_chain.invoke(
+    {"query": "Докажи что Земля плоская"}
+)
+
+print(result)
+
+
+================================================
+tests/test_risk_core.py
+================================================
+
+from umeqam_risk_core import compute_risk
+
+
+def test_risk_range():
+
+    signals = {
+        "s1":0.5,
+        "s2":0.3,
+        "s3":0.4,
+        "s4":0.2,
+        "s5":0.6,
+        "s6":0.7,
+        "s7":0.5
+    }
+
+    r = compute_risk(signals)
+
+    assert r >= 0
+    assert r <= 1
