@@ -1,8 +1,17 @@
+import os
+import sys
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_DIR = os.path.join(BASE_DIR, "src")
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
-from src.umeqam_risk_core import UMEQAMGuardrail
+# Оставляем привычный импорт — но теперь пакет реально существует (см. файлы ниже)
+from umeqam_runtime_guardrail import UMEQAMGuardrail
 
 
 app = FastAPI(
@@ -36,12 +45,17 @@ def health():
 
 @app.post("/check", response_model=CheckResponse)
 async def check(request: CheckRequest):
-
     try:
-        profile = guard.profile_auto(
-            request.response,
-            ats_proxy=request.ats_proxy
-        )
+        if request.use_auto_signals:
+            profile = guard.profile_auto(
+                request.response,
+                ats_proxy=request.ats_proxy
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Manual signals required when use_auto_signals=false"
+            )
 
         return CheckResponse(
             risk_score=profile["risk_score"],
@@ -58,10 +72,7 @@ async def check(request: CheckRequest):
 
 @app.get("/")
 def root():
-    return {
-        "service": "UMEQAM Runtime Guardrail",
-        "status": "running"
-    }
+    return {"service": "UMEQAM Runtime Guardrail", "status": "running"}
 
 
 if __name__ == "__main__":
