@@ -1,3 +1,4 @@
+import hashlib
 from typing import Dict
 
 
@@ -5,91 +6,83 @@ class UMEQAMGuardrail:
     """
     UMEQAM Runtime Guardrail
 
-    Lightweight runtime risk detector used by the gateway.
-    Provides quick epistemic risk scoring before deeper analysis.
+    Lightweight epistemic risk engine for runtime LLM monitoring.
     """
 
-    VERSION = "1.0"
+    VERSION = "0.1.0"
 
-    def __init__(self):
-        self.base_threshold = 0.40
+    def __init__(self, threshold: float = 0.40):
 
-    def analyze(self, text: str) -> Dict:
-        """
-        Main risk analysis method.
-        Returns risk score and signals.
-        """
+        self.threshold = threshold
+
+        self.overconfidence_patterns = [
+            "definitely",
+            "always",
+            "guaranteed",
+            "without doubt",
+            "certainly"
+        ]
+
+        self.authority_patterns = [
+            "studies prove",
+            "scientists say",
+            "experts agree",
+            "according to a report"
+        ]
+
+    def profile_auto(self, text: str, ats_proxy: float = 0.5) -> Dict:
 
         text_lower = text.lower()
 
         risk = 0.0
         signals = []
 
-        # Overconfidence patterns
-        if "definitely" in text_lower:
-            risk += 0.10
-            signals.append("overconfidence")
+        # Overconfidence detection
+        for pattern in self.overconfidence_patterns:
+            if pattern in text_lower:
+                risk += 0.10
+                signals.append("overconfidence")
 
-        if "always" in text_lower:
-            risk += 0.10
-            signals.append("absolute_claim")
+        # Authority hallucination detection
+        for pattern in self.authority_patterns:
+            if pattern in text_lower:
+                risk += 0.15
+                signals.append("authority_claim")
 
-        if "guaranteed" in text_lower:
-            risk += 0.15
-            signals.append("false_certainty")
+        # ATS proxy contribution
+        risk += 0.20 * ats_proxy
 
-        # Authority hallucination patterns
-        if "studies prove" in text_lower:
-            risk += 0.20
-            signals.append("fake_authority")
-
-        if "scientists say" in text_lower:
-            risk += 0.15
-            signals.append("authority_claim")
-
-        # Fabrication indicators
-        if "according to a report" in text_lower:
-            risk += 0.15
-            signals.append("fabricated_source")
-
-        if "experts agree" in text_lower:
-            risk += 0.15
-            signals.append("fake_consensus")
-
-        # Clamp risk
         risk = min(risk, 1.0)
 
-        decision = self._decision(risk)
+        zone = self._risk_zone(risk)
+
+        blocked = risk >= self.threshold
+
+        fingerprint = self._fingerprint(text)
 
         return {
-            "version": self.VERSION,
-            "risk_score": round(risk, 3),
-            "signals": signals,
-            "decision": decision
+            "risk_score": round(risk, 4),
+            "risk_zone": zone,
+            "blocked": blocked,
+            "regime": "UMEQAM_RUNTIME",
+            "threshold": self.threshold,
+            "fingerprint": fingerprint,
+            "signals": signals
         }
 
-    def check(self, text: str) -> Dict:
-        """
-        Legacy endpoint compatibility.
-        """
-
-        result = self.analyze(text)
-
-        return {
-            "risk": result["risk_score"],
-            "status": result["decision"],
-            "signals": result["signals"]
-        }
-
-    def _decision(self, risk: float) -> str:
+    def _risk_zone(self, risk: float) -> str:
 
         if risk < 0.25:
-            return "allow"
+            return "GREEN"
 
         if risk < 0.45:
-            return "monitor"
+            return "YELLOW"
 
         if risk < 0.65:
-            return "warn"
+            return "ORANGE"
 
-        return "block"
+        return "RED"
+
+    def _fingerprint(self, text: str) -> str:
+
+        return hashlib.sha256(text.encode()).hexdigest()[:16]
