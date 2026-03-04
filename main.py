@@ -1,11 +1,10 @@
-# main.py
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
-# исправленный импорт
+# прямой импорт из файла
 from umeqam_runtime_guardrail.guardrail import UMEQAMGuardrail
+
 
 app = FastAPI(
     title="UMEQAM Runtime Guardrail API",
