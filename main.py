@@ -1,8 +1,17 @@
+import sys
+import os
+
+# добавляем папку src в путь Python
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SRC_PATH = os.path.join(BASE_DIR, "src")
+
+if SRC_PATH not in sys.path:
+    sys.path.insert(0, SRC_PATH)
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import uvicorn
 
-# импорт напрямую из файла
 from umeqam_runtime_guardrail.guardrail import UMEQAMGuardrail
 
 
@@ -39,7 +48,6 @@ def health():
 async def check(request: CheckRequest):
 
     try:
-
         profile = guard.profile_auto(
             request.response,
             ats_proxy=request.ats_proxy
