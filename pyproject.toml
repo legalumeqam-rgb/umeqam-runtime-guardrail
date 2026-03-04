@@ -1,37 +1,23 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "umeqam-runtime-guardrail"
 version = "0.1.0"
-description = "Deterministic runtime epistemic guardrail for LLM pipelines under EU AI Act — s7 damping, nonlinear scoring, LangChain ready"
+description = "Deterministic runtime epistemic guardrail for LLM pipelines under EU AI Act"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-authors = [{name = "Umeqam", email = "your@email.here"}]  # замени если хочешь
-keywords = ["llm", "guardrail", "ai-governance", "eu-ai-act", "hallucination-detection", "runtime-monitoring"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Development Status :: 3 - Alpha",
-]
-
+authors = [{name = "Umeqam"}]
 dependencies = [
-    "numpy",  # если используешь в scoring
-    "langchain-core>=0.1.0",  # для Runnable и integration
-    # "langchain-openai",  # optional, для примеров — не добавляй как hard dep
-]
-
-[project.optional-dependencies]
-examples = [
+    "numpy",
+    "langchain-core",
     "langchain-openai",
-    "streamlit",  # если добавим demo
+    "streamlit"
 ]
-
-[project.urls]
-"Homepage" = "https://github.com/legalumeqam-rgb/umeqam-runtime-guardrail"
-"Repository" = "https://github.com/legalumeqam-rgb/umeqam-runtime-guardrail"
-"Bug Tracker" = "https://github.com/legalumeqam-rgb/umeqam-runtime-guardrail/issues"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
