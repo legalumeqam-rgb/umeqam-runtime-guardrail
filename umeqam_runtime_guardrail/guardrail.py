@@ -13,6 +13,5 @@ class UMEQAMGuardrail:
             "risk_zone": "HIGH" if blocked else "LOW",
             "blocked": blocked,
             "regime": "runtime",
-            "threshold": self.threshold,
-            "fingerprint": "dev"
+            "threshold": self.threshold
         }
