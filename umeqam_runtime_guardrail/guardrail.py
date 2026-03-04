@@ -1,53 +1,18 @@
-import hashlib
-
-
 class UMEQAMGuardrail:
 
-    def __init__(self, threshold: float = 0.4):
+    def __init__(self, threshold=0.36):
         self.threshold = threshold
 
-    def profile_auto(self, text: str, ats_proxy: float = 0.5):
+    def profile_auto(self, text, ats_proxy=0.5):
 
-        text = text.lower()
-
-        risk = 0.0
-        signals = []
-
-        if "definitely" in text:
-            risk += 0.1
-            signals.append("overconfidence")
-
-        if "always" in text:
-            risk += 0.1
-            signals.append("absolute_claim")
-
-        if "scientists say" in text:
-            risk += 0.2
-            signals.append("authority_claim")
-
-        risk += 0.2 * ats_proxy
-
-        risk = min(risk, 1.0)
-
-        if risk < 0.25:
-            zone = "GREEN"
-        elif risk < 0.45:
-            zone = "YELLOW"
-        elif risk < 0.65:
-            zone = "ORANGE"
-        else:
-            zone = "RED"
-
-        blocked = risk >= self.threshold
-
-        fingerprint = hashlib.sha256(text.encode()).hexdigest()[:16]
+        risk_score = ats_proxy
+        blocked = risk_score >= self.threshold
 
         return {
-            "risk_score": round(risk, 4),
-            "risk_zone": zone,
+            "risk_score": risk_score,
+            "risk_zone": "HIGH" if blocked else "LOW",
             "blocked": blocked,
-            "regime": "UMEQAM_RUNTIME",
+            "regime": "runtime",
             "threshold": self.threshold,
-            "fingerprint": fingerprint,
-            "signals": signals
+            "fingerprint": "dev"
         }
