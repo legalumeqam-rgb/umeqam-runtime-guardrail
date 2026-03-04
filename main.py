@@ -1,13 +1,15 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import uvicorn
 import sys
 import os
 
-# добавляем текущую папку проекта в python path
-sys.path.append(os.path.dirname(__file__))
+# гарантированно добавляем каталог проекта в sys.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, BASE_DIR)
 
-# прямой импорт guardrail
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import uvicorn
+
+# прямой импорт из локального пакета
 from umeqam_runtime_guardrail.guardrail import UMEQAMGuardrail
 
 
