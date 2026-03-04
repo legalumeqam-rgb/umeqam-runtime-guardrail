@@ -208,6 +208,14 @@ Repository becomes:
 
 This moves repo from:
 
+## Examples
+
+Запусти примеры после установки пакета:
+
+- `python examples/simple_usage.py` — базовая проверка
+- `python examples/langchain_demo.py` — с LangChain
+- `streamlit run examples/streamlit_demo.py` — веб-демо
+
 "experimental code"
 
 to
