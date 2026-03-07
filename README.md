@@ -2,9 +2,7 @@
 
 Experimental runtime guardrail for LLM pipelines.
 
-The guardrail sits between the language model and the application layer and evaluates generated outputs for structural risk signals.
-
-It produces a deterministic risk classification before the response reaches the application.
+The guardrail sits between the language model and the application layer and evaluates generated outputs for structural risk signals before they reach the application.
 
 Pipeline:
 
@@ -20,7 +18,7 @@ allow / block / escalate
 
 ---
 
-# Installation
+## Installation
 
 Clone the repository and install locally:
 
